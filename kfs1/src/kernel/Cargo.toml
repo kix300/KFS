@@ -8,8 +8,18 @@ crate-type = ["staticlib"]
 
 [profile.dev]
 panic = "abort"
+lto = true
 
 [profile.release]
 panic = "abort"
+lto = true
+opt-level = 2
+strip = true
+codegen-units = 1
 
 [dependencies]
+volatile = "0.2.6"
+
+[dependencies.lazy_static]
+version = "1.0"
+features = ["spin_no_std"]

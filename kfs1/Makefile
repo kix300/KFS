@@ -22,7 +22,7 @@ boot.o: src/boot.asm
 
 # Build Rust kernel
 rust-kernel:
-	cd $(KERNEL_DIR) && $(CARGO) build --release --target i386-unknown-none.json -Z build-std=core,alloc
+	cd $(KERNEL_DIR) && $(CARGO) build --release #--target i386-unknown-none.json -Z build-std=core # plus besoins car defini dans config toml
 
 # Link everything
 $(KERNEL): boot.o rust-kernel

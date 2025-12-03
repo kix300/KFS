@@ -1,5 +1,8 @@
-#![no_std]
-#![no_main]
+#![no_std] // on enleve std
+#![no_main] // ici on tej le main car on veux overwrite crt0 qui est la fonction appeler avant main
+// et dans notre cas kernel_main
+
+mod vga_buffer;
 
 use core::panic::PanicInfo;
 
@@ -9,10 +12,10 @@ const VGA_WIDTH: usize = 80;
 const VGA_HEIGHT: usize = 25;
 
 // Entry point appelé depuis l'ASM
-#[no_mangle]
+#[unsafe(no_mangle)] // ca cest pour empecher le compilateur de changer le nom de la fonction
 pub extern "C" fn kernel_main(_magic: u32, _addr: u32) {
     let vga = VGA_MEMORY as *mut u16;
-    let msg = b"Hello from Rust kernel!";
+    let msg = b"Hello from Rust kernel! Created by kix!";
     
     unsafe {
         // Clear screen
@@ -24,6 +27,7 @@ pub extern "C" fn kernel_main(_magic: u32, _addr: u32) {
         for (i, &byte) in msg.iter().enumerate() {
             *vga.add(i) = 0x0F00 | byte as u16;
         }
+        vga_buffer::print_something();
     }
     
     // Halt
@@ -38,8 +42,5 @@ pub extern "C" fn kernel_main(_magic: u32, _addr: u32) {
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     loop {
-        unsafe {
-            core::arch::asm!("hlt");
-        }
     }
 }
