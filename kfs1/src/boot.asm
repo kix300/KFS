@@ -25,7 +25,7 @@ stack_top:
 ; Point d'entrée
 section .text
 global _start
-extern kernel_main
+extern start
 
 _start:
     ; Setup stack
@@ -36,10 +36,4 @@ _start:
     push eax  ; Multiboot magic number
     
     ; Call kernel main
-    call kernel_main
-    
-    ; Halt si kernel_main retourne
-    cli
-.hang:
-    hlt
-    jmp .hang
+    call start 
