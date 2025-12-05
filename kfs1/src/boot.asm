@@ -36,4 +36,4 @@ _start:
     push eax  ; Multiboot magic number
     
     ; Call kernel main
-    call start 
+    call start
