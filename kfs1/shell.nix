@@ -1,8 +1,9 @@
+# nixshell for KFS-1
 {
 pkgs ? import <nixpkgs> { },
 }:
 let
-	overrides = (builtins.fromTOML (builtins.readFile ./rust-toolchain.toml));
+	overrides = (builtins.fromTOML (builtins.readFile ./src/kernel/rust-toolchain.toml));
 	libPath =
 		with pkgs;
 		lib.makeLibraryPath [

@@ -39,6 +39,9 @@ $(ISO): $(KERNEL)
 run: $(ISO)
 	qemu-system-i386 -cdrom $(ISO)
 
+test:
+	cd src/kernel && cargo build && cargo test
+
 # Clean build artifacts
 clean:
 	rm -f boot.o $(KERNEL) $(ISO)
