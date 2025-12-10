@@ -5,7 +5,6 @@ edition = "2021"
 
 [lib]
 crate-type = ["staticlib"]
-test = true
 
 [profile.dev]
 # panic = "abort"
@@ -19,7 +18,7 @@ strip = true
 codegen-units = 1
 
 [dependencies]
-volatile = {version = "0.2.6", default-features = false} 
+volatile = {version = "0.2.6", default-features = false}
 spin = "0.10.0" # spinning mutex : dont block, instead try to lock it again and again taht buring cpu time
 
 [dependencies.lazy_static]
