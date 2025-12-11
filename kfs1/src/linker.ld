@@ -3,7 +3,7 @@ ENTRY(_start)
 SECTIONS {
     . = 1M;
     
-    .boot : {
+    .boot : ALIGN(4K) {
         *(.multiboot)
     }
     

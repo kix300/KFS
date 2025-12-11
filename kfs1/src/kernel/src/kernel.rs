@@ -27,10 +27,10 @@ println!(" hello world depuis println! fait main ");
     loop {}
 }
 
-// Point d'entrée pour les tests
-#[cfg(test)]
-#[no_mangle]
-pub extern "C" fn start() -> ! {
-    test_main();
-    loop {}
-}
+//Point d'entrée pour les tests
+// #[cfg(test)]
+// #[no_mangle]
+// pub extern "C" fn start() -> ! {
+//     test_main();
+//     loop {}
+// }

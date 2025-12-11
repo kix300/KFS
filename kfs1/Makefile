@@ -6,7 +6,7 @@ all: run
 run: 
 	cd src/kernel && cargo run
 test: 
-	cd src/kernel && cargo test
+	cd src/kernel && cargo test --lib
 
 # Clean build artifacts
 clean:

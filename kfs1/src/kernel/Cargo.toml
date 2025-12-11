@@ -7,12 +7,13 @@ edition = "2021"
 name = "kernel"
 path = "src/kernel.rs"
 crate-type = ["staticlib", "rlib"] 
+# test = true
 
 [[bin]]
 name = "kiki"
 path = "src/bin.rs"
-#test = true
-#bench = true
+test = true
+bench = false
 
 [profile.dev]
 # panic = "abort"
