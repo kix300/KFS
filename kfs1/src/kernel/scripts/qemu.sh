@@ -6,11 +6,8 @@ if [ -z "$ARCH" ]; then
   ARCH="i386"
 fi
 
-# Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-# Root of the kernel project
 KERNEL_ROOT="$SCRIPT_DIR/.."
-# Root of the entire project
 PROJECT_ROOT="$KERNEL_ROOT/../.."
 
 case $ARCH in
@@ -36,13 +33,8 @@ case $ARCH in
         ;;
 esac
 
-# Change to kernel directory for building
-cd "$KERNEL_ROOT"
-
-# Compile boot.asm
 $AS $ASFLAGS "$PROJECT_ROOT/src/boot.asm" -o boot.o
 
-# Find the Rust static library - use the correct path relative to kernel dir
 RUST_LIB="target/$RUST_TARGET/debug/libkernel.a"
 
 if [ ! -f "$RUST_LIB" ]; then
@@ -50,12 +42,11 @@ if [ ! -f "$RUST_LIB" ]; then
     exit 1
 fi
 
-# Link boot.o with Rust kernel library
-$LD $LDFLAGS boot.o "$RUST_LIB" -o kiki_final
+$LD $LDFLAGS boot.o "$RUST_LIB" -o kiki
 
 # Build ISO
 mkdir -p iso/boot/grub
-cp kiki_final iso/boot/kiki
+mv kiki iso/boot/kiki
 cp grub.cfg iso/boot/grub
 grub-mkrescue -o kernel.iso iso
 
