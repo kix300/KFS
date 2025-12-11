@@ -4,7 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type = ["staticlib"]
+name = "kernel"
+path = "src/kernel.rs"
+crate-type = ["staticlib", "rlib"] 
+
+[[bin]]
+name = "kiki"
+path = "src/bin.rs"
+#test = true
+#bench = true
 
 [profile.dev]
 # panic = "abort"
