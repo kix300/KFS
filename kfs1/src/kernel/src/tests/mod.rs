@@ -1,4 +1,4 @@
-use crate::qemu::{exit_qemu, QemuExitCode};
+// use crate::qemu::{exit_qemu, QemuExitCode};
 // pub mod qemu;
 
 #[cfg(kfs_test)]
@@ -24,7 +24,7 @@ pub fn run_tests() {
     }
 
     println!("=== All tests passed! ===");
-    exit_qemu(QemuExitCode::Success);
+    // exit_qemu(QemuExitCode::Success);
 }
 
 #[cfg(kfs_test)]
