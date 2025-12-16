@@ -10,6 +10,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 KERNEL_ROOT="$SCRIPT_DIR/.."
 PROJECT_ROOT="$KERNEL_ROOT/../.."
 
+# Se placer dans le répertoire du kernel pour que les chemins relatifs fonctionnent
+cd "$KERNEL_ROOT"
+
 case $ARCH in
     "x86"|"i386")
         QEMU=qemu-system-i386
