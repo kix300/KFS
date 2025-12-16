@@ -1,6 +1,6 @@
 use lazy_static::lazy_static;
 use volatile::Volatile; // use ram for our buff // permet d'initialiser un static au moment de son appelle au lieu de
-                                                // le faire par le compilateur
+                        // le faire par le compilateur
 use core::fmt; // pour afficher les float et numbers
 use spin::Mutex;
 // copy des macro de print et println en remplacent par mon code

@@ -1,10 +1,11 @@
 #![no_std]
 #![no_main]
 
-mod panic;
+pub mod panic;
+pub mod qemu;
 #[cfg(kfs_test)]
 pub mod tests;
-mod vga_buffer;
+pub mod vga_buffer;
 
 #[no_mangle]
 pub extern "C" fn start(_magic: u32, _addr: u32) -> ! {
