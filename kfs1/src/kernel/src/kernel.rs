@@ -1,11 +1,14 @@
 #![no_std]
 #![no_main]
 
+pub mod device;
 pub mod panic;
 pub mod qemu;
 #[cfg(kfs_test)]
 pub mod tests;
 pub mod vga_buffer;
+
+use device::keyboard::Keyboard;
 
 #[no_mangle]
 pub extern "C" fn start(_magic: u32, _addr: u32) -> ! {
@@ -21,7 +24,14 @@ pub extern "C" fn start(_magic: u32, _addr: u32) -> ! {
             .write_str(", Created by kix!")
             .unwrap();
         println!(" hello world depuis println! fait main ");
-    }
+        let mut keyboard = Keyboard::default();
+        loop {
+            let c = match keyboard.input() {
+                Some(key) => key,
+                None => continue,
+            };
 
-    loop {}
+            print!("{}", c); //TODO : create a console
+        }
+    }
 }

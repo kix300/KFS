@@ -1,9 +1,34 @@
-use lazy_static::lazy_static;
-use volatile::Volatile; // use ram for our buff // permet d'initialiser un static au moment de son appelle au lieu de
-                        // le faire par le compilateur
+//! VGA Text Mode Buffer Driver for x86 Architecture
+//!
+//! This module provides a safe interface to the VGA text mode buffer, enabling
+//! text output to the screen in a bare metal environment. It implements a
+//! writer abstraction that handles character display, scrolling, and color
+//! formatting.
+//!
+//! The driver interfaces directly with the VGA hardware through a memory-mapped
+//! buffer located at physical address 0xB8000. This 4000-byte region represents
+//! a 80x25 grid of character cells, where each cell consists of:
+//! - 1 byte for the ASCII character
+//! - 1 byte for the color code (4 bits background, 4 bits foreground)
+//!
+//! # Architecture
+//! The module uses a global `WRITER` instance protected by a spin lock to ensure
+//! thread-safe access. All writes go through the `Volatile` wrapper to prevent
+//! compiler optimizations that could eliminate hardware-critical writes.
+//!
+//! # Features
+//! - 16 foreground and 16 background color support
+//! - Automatic line wrapping and scrolling
+//! - Newline handling
+//! - Format macro support (`print!` and `println!`)
+//! - Thread-safe global writer instance
+
 use core::fmt; // pour afficher les float et numbers
+use lazy_static::lazy_static;
 use spin::Mutex;
-// copy des macro de print et println en remplacent par mon code
+use volatile::Volatile; // use ram for our buff permet d'initialiser un static au moment de son appelle au lieu de le faire par le compilateur
+
+/// copy des macro de print et println en remplacent par mon code
 #[macro_export]
 macro_rules! print {
     ($($arg:tt)*) => ($crate::vga_buffer::_print(format_args!($($arg)*)));
