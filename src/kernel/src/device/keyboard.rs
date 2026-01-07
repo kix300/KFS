@@ -15,6 +15,9 @@
 //! translates these hardware-level codes into ASCII characters that can be used
 //! by higher level software like a shell or text editor. Special consideration
 //! is given to key release codes (>0x80) to properly track modifier key states.
+//! NEED GDT & IDT
+
+
 
 #[repr(u8)]
 #[allow(missing_docs)]
@@ -170,6 +173,8 @@ impl Keyboard {
         let ctrl_pressed = self.ctrl_pressed;
         let alt_pressed = self.alt_pressed;
         let key = unsafe { core::mem::transmute::<u8, KeyboardKey>(scan_code) };
+        // use crate::println;
+        // println!("key : {}", scan_code);
 
         match (key, shift_pressed, ctrl_pressed, alt_pressed) {
             // === LETTERS ===
