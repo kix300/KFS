@@ -3,26 +3,20 @@
 //! NEED GDT & IDT
 
 
-
-
 use core::sync::atomic::{AtomicU8, Ordering};
 
-// Ports PS/2
 const PS2_DATA_PORT: u16 = 0x60;
 const PS2_STATUS_PORT: u16 = 0x64;
 const PS2_COMMAND_PORT: u16 = 0x64;
 
-// Commandes du contrôleur PS/2
 const PS2_CMD_ENABLE_SECOND_PORT: u8 = 0xA8;
 const PS2_CMD_WRITE_TO_MOUSE: u8 = 0xD4;
 
-// Commandes de la souris
 const MOUSE_CMD_SET_DEFAULTS: u8 = 0xF6;
 const MOUSE_CMD_ENABLE_PACKET_STREAMING: u8 = 0xF4;
 const MOUSE_CMD_GET_DEVICE_ID: u8 = 0xF2;
 const MOUSE_CMD_SET_SAMPLE_RATE: u8 = 0xF3;
 
-// États de réception des paquets
 static PACKET_STATE: AtomicU8 = AtomicU8::new(0);
 static mut PACKET_BUFFER: [u8; 4] = [0; 4];
 
@@ -65,31 +59,24 @@ impl Default for Mouse {
 }
 
 impl Mouse {
-    /// Initialise la souris PS/2 avec support de la molette
     pub fn init(&mut self) -> Result<(), &'static str> {
-        // Activer le second port PS/2 (souris)
         Self::wait_write();
         outb(PS2_COMMAND_PORT, PS2_CMD_ENABLE_SECOND_PORT);
 
-        // Envoyer la commande "set defaults" à la souris
         Self::write_mouse(MOUSE_CMD_SET_DEFAULTS)?;
         Self::read_response()?;
 
-        // Détecter et activer la molette (IntelliMouse)
         if Self::enable_wheel().is_ok() {
             self.has_wheel = true;
         }
 
-        // Activer le streaming de paquets
         Self::write_mouse(MOUSE_CMD_ENABLE_PACKET_STREAMING)?;
         Self::read_response()?;
 
         Ok(())
     }
 
-    /// Active le support de la molette (séquence magique IntelliMouse)
     fn enable_wheel() -> Result<(), &'static str> {
-        // Séquence magique: set sample rate 200, 100, 80
         Self::write_mouse(MOUSE_CMD_SET_SAMPLE_RATE)?;
         Self::read_response()?;
         Self::write_mouse(200)?;
@@ -105,11 +92,9 @@ impl Mouse {
         Self::write_mouse(80)?;
         Self::read_response()?;
 
-        // Demander l'ID du périphérique
         Self::write_mouse(MOUSE_CMD_GET_DEVICE_ID)?;
         let device_id = Self::read_response()?;
 
-        // ID 3 = souris avec molette, ID 0 = souris standard
         if device_id == 3 {
             Ok(())
         } else {
@@ -117,7 +102,6 @@ impl Mouse {
         }
     }
 
-    /// Écrit une commande à la souris
     fn write_mouse(value: u8) -> Result<(), &'static str> {
         Self::wait_write();
         outb(PS2_COMMAND_PORT, PS2_CMD_WRITE_TO_MOUSE);
@@ -126,7 +110,6 @@ impl Mouse {
         Ok(())
     }
 
-    /// Lit une réponse de la souris
     fn read_response() -> Result<u8, &'static str> {
         for _ in 0..1000 {
             if Self::can_read() {
@@ -137,7 +120,6 @@ impl Mouse {
         Err("Mouse read timeout")
     }
 
-    /// Attend que le contrôleur soit prêt pour l'écriture
     fn wait_write() {
         for _ in 0..1000 {
             if (inb(PS2_STATUS_PORT) & 0x02) == 0 {
@@ -147,20 +129,17 @@ impl Mouse {
         }
     }
 
-    /// Vérifie si des données sont disponibles
     fn can_read() -> bool {
         let status = inb(PS2_STATUS_PORT);
         (status & 0x01) != 0 && (status & 0x20) != 0
     }
 
-    /// Petit délai pour la synchronisation
     fn tiny_delay() {
         for _ in 0..100 {
             unsafe { core::arch::asm!("nop") };
         }
     }
 
-    /// Traite les paquets de la souris et retourne les événements
     pub fn handle_interrupt(&mut self) -> Option<MouseEvent> {
         if !Self::can_read() {
             return None;
@@ -180,7 +159,6 @@ impl Mouse {
             return None;
         }
 
-        // Paquet complet reçu
         PACKET_STATE.store(0, Ordering::Relaxed);
 
         unsafe {
@@ -188,12 +166,10 @@ impl Mouse {
             let delta_x = PACKET_BUFFER[1] as i16;
             let delta_y = PACKET_BUFFER[2] as i16;
 
-            // Vérifier le bit de validité
             if (flags & 0x08) == 0 {
                 return None;
             }
 
-            // Étendre le signe pour delta_x et delta_y
             let delta_x = if (flags & 0x10) != 0 {
                 delta_x | 0xFF00u16 as i16
             } else {
@@ -206,19 +182,15 @@ impl Mouse {
                 delta_y
             };
 
-            // Inverser delta_y (coordonnées écran)
             let delta_y = -delta_y;
 
-            // Mettre à jour la position
             self.x_position = self.x_position.saturating_add(delta_x);
             self.y_position = self.y_position.saturating_add(delta_y);
 
-            // Vérifier les boutons
             let left = (flags & 0x01) != 0;
             let right = (flags & 0x02) != 0;
             let middle = (flags & 0x04) != 0;
 
-            // Détecter les changements de boutons
             if left && !self.left_button {
                 self.left_button = true;
                 return Some(MouseEvent::ButtonPressed(MouseButton::Left));
@@ -243,7 +215,6 @@ impl Mouse {
                 return Some(MouseEvent::ButtonReleased(MouseButton::Middle));
             }
 
-            // Vérifier la molette (4ème octet si disponible)
             if self.has_wheel {
                 let wheel_delta = PACKET_BUFFER[3] as i8;
                 if wheel_delta > 0 {
@@ -253,7 +224,6 @@ impl Mouse {
                 }
             }
 
-            // Si mouvement sans événement de bouton/molette
             if delta_x != 0 || delta_y != 0 {
                 return Some(MouseEvent::Move { delta_x, delta_y });
             }
@@ -262,12 +232,10 @@ impl Mouse {
         }
     }
 
-    /// Obtient la position actuelle de la souris
     pub fn position(&self) -> (i16, i16) {
         (self.x_position, self.y_position)
     }
 
-    /// Vérifie si un bouton est pressé
     pub fn is_button_pressed(&self, button: MouseButton) -> bool {
         match button {
             MouseButton::Left => self.left_button,
@@ -277,7 +245,6 @@ impl Mouse {
     }
 }
 
-// Fonctions d'I/O (similaires au clavier)
 pub fn inb(port: u16) -> u8 {
     unsafe {
         let result: u8;
