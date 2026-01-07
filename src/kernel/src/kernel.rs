@@ -7,8 +7,9 @@ pub mod qemu;
 #[cfg(kfs_test)]
 pub mod tests;
 pub mod vga_buffer;
+pub mod x86;
 
-// use device::keyboard::Keyboard;
+use device::keyboard::Keyboard;
 use device::mouse::{MouseEvent, Mouse};
 
 #[no_mangle]

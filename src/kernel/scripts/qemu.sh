@@ -37,6 +37,7 @@ case $ARCH in
 esac
 
 $AS $ASFLAGS "$PROJECT_ROOT/src/boot.asm" -o boot.o
+$AS $ASFLAGS "$PROJECT_ROOT/src/gdt.asm" -o gdt.o
 
 RUST_LIB="target/$RUST_TARGET/debug/libkernel.a"
 
@@ -45,7 +46,7 @@ if [ ! -f "$RUST_LIB" ]; then
     exit 1
 fi
 
-$LD $LDFLAGS boot.o "$RUST_LIB" -o kiki
+$LD $LDFLAGS boot.o gdt.o "$RUST_LIB" -o kiki
 
 # Build ISO
 mkdir -p iso/boot/grub
