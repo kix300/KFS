@@ -10,10 +10,11 @@ pub mod vga_buffer;
 pub mod x86;
 
 use device::keyboard::Keyboard;
-use device::mouse::{MouseEvent, Mouse};
+use device::mouse::{Mouse, MouseEvent};
 
 #[no_mangle]
 pub extern "C" fn start(_magic: u32, _addr: u32) -> ! {
+    x86::gdt::gdt_init();
     #[cfg(kfs_test)]
     tests::run_tests();
 
@@ -44,8 +45,11 @@ pub extern "C" fn start(_magic: u32, _addr: u32) -> ! {
                     MouseEvent::WheelDown => println!("Wheel DOWN!"),
                     MouseEvent::Move { delta_x, delta_y } => {
                         let (x, y) = mouse.position();
-                        println!("Mouse moved: delta=({}, {}), pos=({}, {})", delta_x, delta_y, x, y);
-                    },
+                        println!(
+                            "Mouse moved: delta=({}, {}), pos=({}, {})",
+                            delta_x, delta_y, x, y
+                        );
+                    }
                     MouseEvent::ButtonPressed(btn) => println!("Button pressed: {:?}", btn),
                     MouseEvent::ButtonReleased(btn) => println!("Button released: {:?}", btn),
                 }

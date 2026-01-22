@@ -2,7 +2,6 @@
 //! GET input
 //! NEED GDT & IDT
 
-
 use core::sync::atomic::{AtomicU8, Ordering};
 
 const PS2_DATA_PORT: u16 = 0x60;
