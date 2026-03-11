@@ -520,3 +520,28 @@ pub fn outb(addr: u16, data: u8) {
         asm!("out dx, al", in("dx") addr, in("al") data, options(nomem, nostack, preserves_flags));
     }
 }
+
+use spin::Mutex;
+
+pub static KEYBOARD: Mutex<Keyboard> = Mutex::new(Keyboard {
+    shift_pressed: false,
+    ctrl_pressed:  false,
+    alt_pressed:   false,
+});
+
+impl Keyboard {
+    // Nouvelle méthode pour IRQ — on a déjà le scancode
+    pub fn process(&mut self, scan_code: u8) -> Option<char> {
+        match scan_code {
+            56  => { self.alt_pressed   = true;  return None; },
+            184 => { self.alt_pressed   = false; return None; },
+            29  => { self.ctrl_pressed  = true;  return None; },
+            157 => { self.ctrl_pressed  = false; return None; },
+            42  => { self.shift_pressed = true;  return None; },
+            170 => { self.shift_pressed = false; return None; },
+            s if s >= 0x80 => return None,  // key release
+            _ => {}
+        }
+        Some(self.get_ascii(scan_code))
+    }
+}

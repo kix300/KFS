@@ -27,16 +27,34 @@ struct Idtr {
 pub extern "C" fn exception_handler() -> ! {
     unsafe {
         core::arch::asm!("cli; hlt", options(nostack, noreturn));
-        //     core::arch::naked_asm!(
-        //         "cli",
-        //         "hlt",
-        //         // si hlt est interrompu par Non-Maskable Interrupt( NMI)
-        //         "2:",
-        //         "hlt",
-        //         "jmp 2b",
-        // )
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn irq_handler(irq_num: u32) {
+    match irq_num {
+        0 => {},
+        1 => {
+            let scancode = crate::device::keyboard::inb(0x60);
+            println!("IRQ1 scancode={:#x}", scancode); // debug
+            if let Some(c) = crate::device::keyboard::KEYBOARD.lock().process(scancode) {
+                if c != '\0' {
+                    println!("{}", c);
+                }
+            }
+        },
+        12 => {
+        },
+        _ => {
+            println!("IRQ {}", irq_num);
+        }
     }
 
+    unsafe {
+        crate::x86::idt::PICS
+            .lock()
+            .notify_end_of_interrupt((irq_num + 32) as u8);
+    }
 }
 
 
@@ -77,19 +95,22 @@ fn idt_load() {
     }
 }
 extern "C" {
-    static isr_stub_table: [u32; 32];
+static isr_stub_table: [u32; 32];
+static irq_stub_table: [u32; 16];
 }
 
 pub fn init_idt() {
     idt_set_descriptor(0, exception_handler as *const() as u32, 0x8E);
-        unsafe {
-        // Enregistre chaque stub de la table dans l'IDT
+    unsafe {
         for i in 0..32u8 {
             idt_set_descriptor(
                 i,
-                isr_stub_table[i as usize],  // adresse du stub ASM
+                isr_stub_table[i as usize],
                 0x8E,
             );
+        }
+        for i in 0..16u8 {
+            idt_set_descriptor(32+i, irq_stub_table[i as usize], 0x8E);
         }
     }
     idt_load();
@@ -98,7 +119,7 @@ pub fn init_idt() {
     unsafe {core::arch::asm!("int3")};
 }
 
-use crate::pic8259::pic8259::ChainedPics;
+use crate::{pic8259::pic8259::ChainedPics, println};
 use spin;
 
 pub const PIC_1_OFFSET: u8 = 32;

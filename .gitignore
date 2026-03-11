@@ -1,0 +1,8 @@
+idt.o
+gdt.o
+boot.o
+target/
+kernel.iso
+iso/
+
+
