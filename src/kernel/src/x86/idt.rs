@@ -1,0 +1,108 @@
+//! Interrupt Descriptor Tables
+//! This table will be use to interrupt cpu when needed
+//! when a key is pressed the cpu should be interrupt do what the key do and then go back to what he was
+//! IDT need GDT
+//! IDT need to be init + have exception
+
+const IDT_ENTRY_SIZE: usize = 256;
+
+static mut IDT: [InterruptDescriptor; IDT_ENTRY_SIZE] = [InterruptDescriptor::empty(); IDT_ENTRY_SIZE];
+
+#[derive(Clone, Copy)]
+#[repr(C, packed)]
+struct InterruptDescriptor {
+    isr_low: u16, //0..15 first bits of the address of ISR
+    selector: u16, // Selector in GDT
+    zero: u8, //unused set to 0
+    type_attributes: u8, // Gate type, dpl and p fileds
+    isr_high: u16, // 15..31 last bits of the address of ISR
+}
+
+#[repr(C, packed)]
+struct Idtr {
+    limit: u16,
+    base: u32,
+}
+#[no_mangle]
+pub extern "C" fn exception_handler() -> ! {
+    unsafe {
+        core::arch::asm!("cli; hlt", options(nostack, noreturn));
+        //     core::arch::naked_asm!(
+        //         "cli",
+        //         "hlt",
+        //         // si hlt est interrompu par Non-Maskable Interrupt( NMI)
+        //         "2:",
+        //         "hlt",
+        //         "jmp 2b",
+        // )
+    }
+
+}
+
+
+
+impl InterruptDescriptor {
+    const fn empty() -> Self {
+        InterruptDescriptor {
+            isr_low:         0,
+            selector:        0,
+            zero:            0,
+            type_attributes: 0,
+            isr_high:        0,
+        }
+    }
+    fn set(isr: u32, flags: u8) -> Self{
+        InterruptDescriptor{
+            isr_low:         (isr & 0xFFFF) as u16,
+            selector:        0x08,
+            zero:            0,
+            type_attributes: flags,
+            isr_high:        (isr >>16) as u16,
+        }
+    }
+}
+fn idt_set_descriptor(vector: u8, isr: u32, flags: u8) {
+    unsafe {
+        IDT[vector as usize] = InterruptDescriptor::set(isr, flags);
+    }
+}
+fn idt_load() {
+    let base = { core::ptr::addr_of!(IDT) as u32 };
+    let idtr = Idtr {
+        limit: (core::mem::size_of::<[InterruptDescriptor; IDT_ENTRY_SIZE]>() - 1) as u16,
+        base,
+    };
+    unsafe {
+        core::arch::asm!("lidt [{}]", in(reg) &idtr, options(nostack));
+    }
+}
+extern "C" {
+    static isr_stub_table: [u32; 32];
+}
+
+pub fn init_idt() {
+    idt_set_descriptor(0, exception_handler as *const() as u32, 0x8E);
+        unsafe {
+        // Enregistre chaque stub de la table dans l'IDT
+        for i in 0..32u8 {
+            idt_set_descriptor(
+                i,
+                isr_stub_table[i as usize],  // adresse du stub ASM
+                0x8E,
+            );
+        }
+    }
+    idt_load();
+
+    #[cfg(kfs_test)]
+    unsafe {core::arch::asm!("int3")};
+}
+
+use crate::pic8259::pic8259::ChainedPics;
+use spin;
+
+pub const PIC_1_OFFSET: u8 = 32;
+pub const PIC_2_OFFSET: u8 = PIC_1_OFFSET + 8;
+
+pub static PICS: spin::Mutex<ChainedPics> = spin::Mutex::new(unsafe{ ChainedPics::new(PIC_1_OFFSET, PIC_2_OFFSET)});
+

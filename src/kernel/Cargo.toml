@@ -1,0 +1,41 @@
+[package]
+name = "kernel"
+version = "0.1.0"
+edition = "2021"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kfs_test)'] } # dit a cargo quon autorise ce flag
+
+[lib]
+name = "kernel"
+path = "src/kernel.rs"
+crate-type = ["staticlib", "rlib"]
+# test = true
+
+[[bin]]
+name = "kiki"
+path = "src/bin.rs"
+test = true
+bench = false
+
+[profile.dev]
+# panic = "abort"
+lto = true
+
+[profile.test]
+inherits = "dev"
+
+[profile.release]
+# panic = "abort"
+lto = true
+opt-level = 2
+strip = true
+codegen-units = 1
+
+[dependencies]
+volatile = {version = "0.2.6", default-features = false}
+spin = "0.10.0" # spinning mutex : dont block, instead try to lock it again and again taht buring cpu time
+
+[dependencies.lazy_static]
+version = "1.0"
+features = ["spin_no_std"]
