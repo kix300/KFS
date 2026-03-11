@@ -45,6 +45,7 @@ pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
     WRITER.lock().write_fmt(args).unwrap();
 }
+const HISTORY_HEIGHT: usize = 50;
 
 #[allow(dead_code)] // on enleve le warning de color unused
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -92,19 +93,31 @@ const BUFFER_WIDTH: usize = 80;
 struct Buffer {
     chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
 }
+static mut HISTORY_BUF: [[ScreenChar; BUFFER_WIDTH]; HISTORY_HEIGHT] =
+    [[ScreenChar { ascii_character: b' ', color_code: ColorCode(0) }; BUFFER_WIDTH]; HISTORY_HEIGHT];
+
 
 lazy_static! {
-    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
-        column_position: 0,
-        color_code: ColorCode::new(Color::LightGreen, Color::Black),
-        buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
-    });
+pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
+    column_position: 0,
+    color_code: ColorCode::new(Color::LightGreen, Color::Black),
+    buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
+    #[allow(static_mut_refs)]
+    history:         unsafe { &mut HISTORY_BUF },
+    history_len:     0,
+    scroll_offset:   0,
+});
 }
+
 
 pub struct Writer {
     column_position: usize,
     color_code: ColorCode,
     buffer: &'static mut Buffer,
+
+    history: &'static mut [[ScreenChar; BUFFER_WIDTH]; HISTORY_HEIGHT],
+    history_len: usize,
+    scroll_offset: usize,
 }
 
 impl fmt::Write for Writer {
@@ -144,10 +157,17 @@ impl Writer {
         }
     }
     fn new_line(&mut self) {
+        let blank = ScreenChar { ascii_character: b' ', color_code: self.color_code };
+        let mut line = [blank; BUFFER_WIDTH];
+        for (col, cell) in line.iter_mut().enumerate() {
+            *cell = self.buffer.chars[0][col].read();
+        }
+        self.push_history_line(line);
+
         for row in 1..BUFFER_HEIGHT {
             for col in 0..BUFFER_WIDTH {
-                let character = self.buffer.chars[row][col].read();
-                self.buffer.chars[row - 1][col].write(character);
+                let ch = self.buffer.chars[row][col].read();
+                self.buffer.chars[row - 1][col].write(ch);
             }
         }
         self.clear_row(BUFFER_HEIGHT - 1);
@@ -159,6 +179,50 @@ impl Writer {
                 0x20..=0x7e | b'\n' => self.write_byte(byte),
                 _ => self.write_byte(0xfe),
             }
+        }
+    }
+    pub fn scroll_up(&mut self) {
+        if self.scroll_offset + BUFFER_HEIGHT < self.history_len {
+            self.scroll_offset += 3;
+            self.redraw();
+        }
+    }
+
+    pub fn scroll_down(&mut self) {
+        if self.scroll_offset > 0 {
+            self.scroll_offset = self.scroll_offset.saturating_sub(3);
+            self.redraw();
+        }
+    }
+
+    fn redraw(&mut self) {
+        for row in 0..BUFFER_HEIGHT {
+            // ligne dans l'history à afficher
+            let history_row = self.history_len
+            .saturating_sub(BUFFER_HEIGHT)
+            .saturating_sub(self.scroll_offset)
+            + row;
+
+            if history_row < self.history_len {
+                for col in 0..BUFFER_WIDTH {
+                    self.buffer.chars[row][col].write(self.history[history_row][col]);
+                }
+            } else {
+                self.clear_row(row);
+            }
+        }
+    }
+
+    fn push_history_line(&mut self, row_data: [ScreenChar; BUFFER_WIDTH]) {
+        if self.history_len < HISTORY_HEIGHT {
+            self.history[self.history_len] = row_data;
+            self.history_len += 1;
+        } else {
+            // ring buffer : décale tout
+            for i in 1..HISTORY_HEIGHT {
+                self.history[i - 1] = self.history[i];
+            }
+            self.history[HISTORY_HEIGHT - 1] = row_data;
         }
     }
 }

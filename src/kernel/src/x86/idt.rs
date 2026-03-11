@@ -37,7 +37,7 @@ pub extern "C" fn irq_handler(irq_num: u32) {
         0 => {},
         1 => {
             let scancode = crate::device::keyboard::inb(0x60);
-            println!("IRQ1 scancode={:#x}", scancode); // debug
+            // println!("IRQ1 scancode={:#x}", scancode); // debug
             if let Some(c) = crate::device::keyboard::KEYBOARD.lock().process(scancode) {
                 if c != '\0' {
                     println!("{}", c);
@@ -51,8 +51,8 @@ pub extern "C" fn irq_handler(irq_num: u32) {
                     MouseEvent::ButtonPressed(btn)  => println!("Mouse press: {:?}", btn),
                     MouseEvent::ButtonReleased(btn) => println!("Mouse release: {:?}", btn),
                     MouseEvent::Move { delta_x, delta_y } => println!("Move: {},{}", delta_x, delta_y),
-                    MouseEvent::WheelUp   => println!("Wheel up"),
-                    MouseEvent::WheelDown => println!("Wheel down"),
+                    MouseEvent::WheelUp   => crate::vga_buffer::WRITER.lock().scroll_up(),
+                    MouseEvent::WheelDown   => crate::vga_buffer::WRITER.lock().scroll_down(),
                 }
             }
         },
