@@ -30,6 +30,7 @@ pub extern "C" fn exception_handler() -> ! {
     }
 }
 
+use crate::device::mouse::MouseEvent;
 #[no_mangle]
 pub extern "C" fn irq_handler(irq_num: u32) {
     match irq_num {
@@ -44,6 +45,16 @@ pub extern "C" fn irq_handler(irq_num: u32) {
             }
         },
         12 => {
+            let byte = crate::device::mouse::inb(0x60);
+            if let Some(event) = crate::device::mouse::MOUSE.lock().process(byte) {
+                match event {
+                    MouseEvent::ButtonPressed(btn)  => println!("Mouse press: {:?}", btn),
+                    MouseEvent::ButtonReleased(btn) => println!("Mouse release: {:?}", btn),
+                    MouseEvent::Move { delta_x, delta_y } => println!("Move: {},{}", delta_x, delta_y),
+                    MouseEvent::WheelUp   => println!("Wheel up"),
+                    MouseEvent::WheelDown => println!("Wheel down"),
+                }
+            }
         },
         _ => {
             println!("IRQ {}", irq_num);
