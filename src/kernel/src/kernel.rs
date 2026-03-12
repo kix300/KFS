@@ -30,13 +30,7 @@ pub extern "C" fn start(_magic: u32, _addr: u32) -> ! {
 
     #[cfg(not(test))]
     {
-        use core::fmt::Write;
-        vga_buffer::WRITER.lock().write_str("Hello again").unwrap();
-        vga_buffer::WRITER
-            .lock()
-            .write_str(", Created by kix!")
-            .unwrap();
-        println!(" hello world depuis println! fait main ");
+        println!("Created by kix !");
         loop {
             unsafe { core::arch::asm!("hlt") };
         }
