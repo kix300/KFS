@@ -10,10 +10,10 @@ let
 			wayland
 			libxkbcommon
 			vulkan-loader
-			xorg.libX11
-			xorg.libXcursor
-			xorg.libXi
-			xorg.libXrandr
+			libX11
+			libXcursor
+			libXi
+			libXrandr
 			alsa-lib
 			udev
 		];
@@ -37,10 +37,10 @@ in
 			alsa-lib
 			udev
 			vulkan-loader
-			xorg.libX11
-			xorg.libXcursor
-			xorg.libXi
-			xorg.libXrandr
+			libX11
+			libXcursor
+			libXi
+			libXrandr
 		];
 		RUSTC_VERSION = overrides.toolchain.channel;
 		LIBCLANG_PATH = pkgs.lib.makeLibraryPath [ pkgs.llvmPackages_latest.libclang.lib ];
@@ -63,3 +63,7 @@ in
 				''-I${pkgs.glib.out}/lib/glib-2.0/include/''
 			];
 	}
+
+
+#cargo run -Zjson-target-spec
+# rustup toolchain install nightly-x86_64-unknown-linux-gnu
