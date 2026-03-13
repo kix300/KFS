@@ -8,6 +8,7 @@ pub mod qemu;
 pub mod tests;
 pub mod vga_buffer;
 pub mod x86;
+pub mod tty;
 pub mod pic8259;
 
 
@@ -25,7 +26,7 @@ fn init(){
     unsafe { core::arch::asm!("sti") };
 }
 #[no_mangle]
-pub extern "C" fn start(_magic: u32, _addr: u32) -> ! {
+pub extern "C" fn start(_magic: u32, _addr: u32){
     init();
     println!("cursor pos: {}", device::cursor::get_cursor_position());
     device::cursor::update_cursor(0, 0);

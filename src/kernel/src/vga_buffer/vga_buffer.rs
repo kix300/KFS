@@ -40,6 +40,12 @@ macro_rules! println {
     ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
 }
 
+#[macro_export]
+macro_rules! printlntty {
+    () => ($crate::print!("\n"));
+    ($($arg:tt)*) => ($crate::print!("{}", format_args!($($arg)*)));
+}
+
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
@@ -197,7 +203,6 @@ impl Writer {
 
     fn redraw(&mut self) {
         for row in 0..BUFFER_HEIGHT {
-            // ligne dans l'history à afficher
             let history_row = self.history_len
             .saturating_sub(BUFFER_HEIGHT)
             .saturating_sub(self.scroll_offset)
@@ -218,11 +223,22 @@ impl Writer {
             self.history[self.history_len] = row_data;
             self.history_len += 1;
         } else {
-            // ring buffer : décale tout
             for i in 1..HISTORY_HEIGHT {
                 self.history[i - 1] = self.history[i];
             }
             self.history[HISTORY_HEIGHT - 1] = row_data;
+        }
+    }
+
+    pub fn delete_last_char(&mut self){
+        if self.column_position > 0 {
+            self.column_position -= 1;
+            let row = BUFFER_HEIGHT -1;
+            let col = self.column_position;
+            self.buffer.chars[row][col].write(ScreenChar{
+                ascii_character: b' ',
+                color_code: self.color_code,
+            });
         }
     }
 }

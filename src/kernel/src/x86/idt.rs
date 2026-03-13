@@ -37,10 +37,11 @@ pub extern "C" fn irq_handler(irq_num: u32) {
         0 => {},
         1 => {
             let scancode = crate::device::keyboard::inb(0x60);
-            // println!("IRQ1 scancode={:#x}", scancode); // debug
-            if let Some(c) = crate::device::keyboard::KEYBOARD.lock().process(scancode) {
+            if scancode == 0x0E {
+                crate::tty::tty::TTY.lock().remove_buffer();
+            } else if let Some(c) = crate::device::keyboard::KEYBOARD.lock().process(scancode) {
                 if c != '\0' {
-                    println!("{}", c);
+                    crate::tty::tty::TTY.lock().add_buffer(c as u8);
                 }
             }
         },
