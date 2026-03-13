@@ -43,6 +43,9 @@ impl Tty {
             crate::device::cursor::CURSOR.lock().update_cursor(cx+1, cy);
         }
     }
+    pub fn get_len(&mut self) -> usize {
+        self.input_len
+    }
 
     pub fn remove_buffer(&mut self) {
         if self.input_len > 0 {
@@ -56,16 +59,58 @@ impl Tty {
         }
     }
 
-    pub fn current_input(&self) -> &[u8] {
-        &self.input_buf[..self.input_len]
+    pub fn clear(&mut self){
+        self.input_buf = [0u8; CMD_MAX_LEN];
+        self.input_len = 0;
     }
     pub fn execute(&mut self, cmd: &[u8]){
         match cmd {
-            b"help" => println!("command: help"),
+            b"help" => println!("command: help miguel le boss"),
             // b"clear" => WRITER.lock().clear(),
             _ => println!("command unknow: {}", core::str::from_utf8(cmd).unwrap_or("?"))
         }
     } 
+    pub fn tty(&mut self){
+        let scancode = crate::device::keyboard::inb(0x60);
+        // backspace
+        if scancode == 0x0E{
+            self.remove_buffer();
+        }
+        //right arrow key
+        else if scancode == 0xcd {
+            let (cx, cy) = crate::device::cursor::CURSOR.lock().get_cursor_position();
+            if cx < self.get_len() as u16{
+                crate::device::cursor::CURSOR.lock().update_cursor(cx+1, cy);
+            }
+        }
+        //left arrow key
+        else if scancode == 0xcb {
+            let (cx, cy) = crate::device::cursor::CURSOR.lock().get_cursor_position();
+            if cx > 0 {
+                crate::device::cursor::CURSOR.lock().update_cursor(cx-1, cy);
+            }
+        }
+        else if let Some(c) = crate::device::keyboard::KEYBOARD.lock().process(scancode) {
+            if c != '\0' {
+                // enter
+                if scancode == 0x1c {
+                    println!();
+                    println!("len buff tty: {}", self.get_len());
+                    let cy = crate::device::cursor::CURSOR.lock().get_cursor_position().1;
+                    crate::device::cursor::CURSOR.lock().update_cursor(0, cy);
+                    let cmd_len = self.input_len;
+                    let cmd_buf = self.input_buf;
+                    self.execute(&cmd_buf[..cmd_len]);
+                    self.clear();
+                }else{
+                    self.add_buffer(c as u8);
+                }
+
+            }
+        }
+
+    }
 }
 use spin::Mutex;
 pub static TTY: Mutex<Tty> = Mutex::new(Tty::new());
+

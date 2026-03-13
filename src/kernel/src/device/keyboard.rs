@@ -530,7 +530,6 @@ pub static KEYBOARD: Mutex<Keyboard> = Mutex::new(Keyboard {
 });
 
 impl Keyboard {
-    // Nouvelle méthode pour IRQ — on a déjà le scancode
     pub fn process(&mut self, scan_code: u8) -> Option<char> {
         match scan_code {
             56  => { self.alt_pressed   = true;  return None; },
@@ -539,7 +538,8 @@ impl Keyboard {
             157 => { self.ctrl_pressed  = false; return None; },
             42  => { self.shift_pressed = true;  return None; },
             170 => { self.shift_pressed = false; return None; },
-            s if s >= 0x80 => return None,  // key release
+            0x48 | 0x50 | 0x4B | 0x4D => return None,
+            s if s >= 0x80 => return None,
             _ => {}
         }
         Some(self.get_ascii(scan_code))
