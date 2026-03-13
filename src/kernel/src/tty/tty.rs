@@ -1,4 +1,3 @@
-// use crate::vga_buffer::WRITER;
 use crate::println;
 
 const CMD_MAX_LEN: usize = 256;
@@ -40,6 +39,8 @@ impl Tty {
             self.input_buf[self.input_len] = c;
             self.input_len += 1;
             crate::vga_buffer::WRITER.lock().write_byte(c);
+            let (cx, cy) = crate::device::cursor::CURSOR.lock().get_cursor_position();
+            crate::device::cursor::CURSOR.lock().update_cursor(cx+1, cy);
         }
     }
 
@@ -48,6 +49,10 @@ impl Tty {
             self.input_len -= 1;
             self.input_buf[self.input_len] = 0;
             crate::vga_buffer::WRITER.lock().delete_last_char();
+            let (cx, cy) = crate::device::cursor::CURSOR.lock().get_cursor_position();
+            if cx > 0 {
+                crate::device::cursor::CURSOR.lock().update_cursor(cx-1, cy);
+            }
         }
     }
 

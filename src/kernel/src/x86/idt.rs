@@ -39,9 +39,14 @@ pub extern "C" fn irq_handler(irq_num: u32) {
             let scancode = crate::device::keyboard::inb(0x60);
             if scancode == 0x0E {
                 crate::tty::tty::TTY.lock().remove_buffer();
-            } else if let Some(c) = crate::device::keyboard::KEYBOARD.lock().process(scancode) {
+            }
+            else if let Some(c) = crate::device::keyboard::KEYBOARD.lock().process(scancode) {
                 if c != '\0' {
                     crate::tty::tty::TTY.lock().add_buffer(c as u8);
+                    if scancode == 0x1c {
+                        let cy = crate::device::cursor::CURSOR.lock().get_cursor_position().1;
+                        crate::device::cursor::CURSOR.lock().update_cursor(0, cy);
+                    }
                 }
             }
         },

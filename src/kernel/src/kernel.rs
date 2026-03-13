@@ -28,9 +28,10 @@ fn init(){
 #[no_mangle]
 pub extern "C" fn start(_magic: u32, _addr: u32){
     init();
-    println!("cursor pos: {}", device::cursor::get_cursor_position());
-    device::cursor::update_cursor(0, 0);
-    println!("cursor pos: {}", device::cursor::get_cursor_position());
+    //hardcoder la pos de depart du curseur
+    device::cursor::CURSOR.lock().update_cursor(0, 24);
+    let (cx, cy) = device::cursor::CURSOR.lock().get_cursor_position();
+    println!("cursor pos: x:{} y:{}", cx, cy);
 
     #[cfg(not(test))]
     {
