@@ -65,9 +65,10 @@ impl Tty {
     }
     pub fn execute(&mut self, cmd: &[u8]){
         match cmd {
-            b"help" => println!("command: help miguel le boss"),
+            b"help" => crate::builtin::common_builtin::help(),
+            b"miguel" => crate::builtin::common_builtin::miguel(),
             b"reboot" => crate::builtin::common_builtin::reboot(),
-            // b"clear" => WRITER.lock().clear(),
+            b"clear" => crate::builtin::common_builtin::clear(),
             _ => println!("command unknow: {}", core::str::from_utf8(cmd).unwrap_or("?"))
         }
     } 

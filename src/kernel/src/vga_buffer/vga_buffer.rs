@@ -147,6 +147,18 @@ impl Writer {
             }
         }
     }
+    pub fn clear(&mut self) {
+        let blank = ScreenChar {
+            ascii_character: b' ',
+            color_code: self.color_code,
+        };
+        for row in 0..BUFFER_HEIGHT {
+            for col in 0..BUFFER_WIDTH {
+                self.buffer.chars[row][col].write(blank);
+            }
+        }
+        self.column_position = 0;
+    }
     fn clear_row(&mut self, row: usize) {
         let blank = ScreenChar {
             ascii_character: b' ',
@@ -198,8 +210,8 @@ impl Writer {
     fn redraw(&mut self) {
         for row in 0..BUFFER_HEIGHT {
             let history_row = self.history_len
-            .saturating_sub(BUFFER_HEIGHT)
-            .saturating_sub(self.scroll_offset)
+                .saturating_sub(BUFFER_HEIGHT)
+                .saturating_sub(self.scroll_offset)
             + row;
 
             if history_row < self.history_len {
