@@ -11,8 +11,6 @@ pub struct Tty {
     history_lens: [usize; CMD_HISTORY_SIZE],
     history_len:  usize,
     history_idx:  Option<usize>,
-
-    prompt_col:   usize,
 }
 impl Default for Tty {
     fn default() -> Self {
@@ -30,7 +28,13 @@ impl Tty {
             history_lens: [0usize; CMD_HISTORY_SIZE],
             history_len:  0,
             history_idx:  None,
-            prompt_col:   0,
+        }
+    }
+
+    pub fn add_history(&mut self, input_buf: [u8; CMD_MAX_LEN]){
+        if self.history_len < CMD_HISTORY_SIZE{
+            self.history[self.history_len] = input_buf;
+            self.input_len += 1;
         }
     }
 
@@ -85,6 +89,10 @@ impl Tty {
                 crate::device::cursor::CURSOR.lock().update_cursor(cx+1, cy);
             }
         }
+        // up arrow key
+        else if scancode == 0xc8 {
+            println!("history in progress");
+        }
         //left arrow key
         else if scancode == 0xcb {
             let (cx, cy) = crate::device::cursor::CURSOR.lock().get_cursor_position();
@@ -102,6 +110,7 @@ impl Tty {
                     crate::device::cursor::CURSOR.lock().update_cursor(0, cy);
                     let cmd_len = self.input_len;
                     let cmd_buf = self.input_buf;
+                    self.add_history(cmd_buf);
                     self.execute(&cmd_buf[..cmd_len]);
                     self.clear();
                 }else{
