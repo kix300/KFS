@@ -66,6 +66,7 @@ impl Tty {
     pub fn execute(&mut self, cmd: &[u8]){
         match cmd {
             b"help" => println!("command: help miguel le boss"),
+            b"reboot" => crate::builtin::common_builtin::reboot(),
             // b"clear" => WRITER.lock().clear(),
             _ => println!("command unknow: {}", core::str::from_utf8(cmd).unwrap_or("?"))
         }
@@ -95,7 +96,7 @@ impl Tty {
                 // enter
                 if scancode == 0x1c {
                     println!();
-                    println!("len buff tty: {}", self.get_len());
+                    // println!("len buff tty: {}", self.get_len());
                     let cy = crate::device::cursor::CURSOR.lock().get_cursor_position().1;
                     crate::device::cursor::CURSOR.lock().update_cursor(0, cy);
                     let cmd_len = self.input_len;

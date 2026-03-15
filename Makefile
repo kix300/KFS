@@ -5,7 +5,9 @@ export ARCH ?= i386
 all: run
 
 run:
-	cd src/kernel && cargo run
+	#cd src/kernel && cargo run
+	cd src/kernel && cargo run -Zjson-target-spec #for nixos
+
 
 test:
 	cd src/kernel && RUSTFLAGS="--cfg kfs_test" cargo run

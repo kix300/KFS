@@ -163,9 +163,8 @@ impl Keyboard {
         let shift_pressed = self.shift_pressed;
         let ctrl_pressed = self.ctrl_pressed;
         let alt_pressed = self.alt_pressed;
+        //win command is bugged
         let key = unsafe { core::mem::transmute::<u8, KeyboardKey>(scan_code) };
-        // use crate::println;
-        // println!("key : {}", scan_code);
 
         match (key, shift_pressed, ctrl_pressed, alt_pressed) {
             // === LETTERS ===

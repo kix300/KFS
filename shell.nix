@@ -23,6 +23,12 @@ in
 			clang
 			llvmPackages.bintools
 			rustup
+			cargo
+			rustc
+			rustfmt
+			clippy
+			rust-analyzer
+			rustlings
 			# Bevy dependencies for Linux
 			pkg-config
 			wayland
