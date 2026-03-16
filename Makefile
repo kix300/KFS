@@ -5,8 +5,8 @@ export ARCH ?= i386
 all: run
 
 run:
-	#cd src/kernel && cargo run
-	cd src/kernel && cargo run -Zjson-target-spec #for nixos
+	cd src/kernel && cargo run
+	# cd src/kernel && cargo run -Zjson-target-spec #for nixos
 
 
 test:

@@ -1,3 +1,15 @@
+// ************************************************************************** //
+//                                                                            //
+//                                                        :::      ::::::::   //
+//   tty.rs                                             :+:      :+:    :+:   //
+//                                                    +:+ +:+         +:+     //
+//   By: kduroux <kduroux@student.42.fr>            +#+  +:+       +#+        //
+//                                                +#+#+#+#+#+   +#+           //
+//   Created: 2026/03/16 11:40:07 by kduroux           #+#    #+#             //
+//   Updated: 2026/03/16 11:53:13 by kduroux          ###   ########.fr       //
+//                                                                            //
+// ************************************************************************** //
+
 use crate::println;
 
 const CMD_MAX_LEN: usize = 256;
@@ -10,7 +22,7 @@ pub struct Tty {
     history:      [[u8; CMD_MAX_LEN]; CMD_HISTORY_SIZE],
     history_lens: [usize; CMD_HISTORY_SIZE],
     history_len:  usize,
-    history_idx:  Option<usize>,
+    history_idx:  usize,
 }
 impl Default for Tty {
     fn default() -> Self {
@@ -27,14 +39,14 @@ impl Tty {
             history:      [[0u8; CMD_MAX_LEN]; CMD_HISTORY_SIZE],
             history_lens: [0usize; CMD_HISTORY_SIZE],
             history_len:  0,
-            history_idx:  None,
+            history_idx:  0,
         }
     }
 
     pub fn add_history(&mut self, input_buf: [u8; CMD_MAX_LEN]){
         if self.history_len < CMD_HISTORY_SIZE{
             self.history[self.history_len] = input_buf;
-            self.input_len += 1;
+            self.history_len += 1;
         }
     }
 
@@ -63,7 +75,7 @@ impl Tty {
         }
     }
 
-    pub fn clear(&mut self){
+    pub fn clear_buf(&mut self){
         self.input_buf = [0u8; CMD_MAX_LEN];
         self.input_len = 0;
     }
@@ -76,6 +88,7 @@ impl Tty {
             _ => println!("command unknow: {}", core::str::from_utf8(cmd).unwrap_or("?"))
         }
     } 
+
     pub fn tty(&mut self){
         let scancode = crate::device::keyboard::inb(0x60);
         // backspace
@@ -91,7 +104,29 @@ impl Tty {
         }
         // up arrow key
         else if scancode == 0xc8 {
-            println!("history in progress");
+            //WORK IN PROGRESS
+            // self.clear_buf();
+            if self.history_idx < self.history_len{
+                self.history_idx += 1;
+            }
+            else{
+                self.history_idx -= 1;
+            }
+            println!("hislen: {}",self.history_len);
+            println!("hisidx: {}",self.history_idx);
+            if self.history_idx < self.history_len{
+                let s = core::str::from_utf8(&self.history[self.history_idx]).unwrap_or("<invalide>");
+                println!("{}", s.trim_end_matches('\0'));
+
+            }
+
+            // for entry in self.history.iter() {
+            //     if entry != &[0u8; 256]{
+            //         let s = core::str::from_utf8(entry).unwrap_or("<invalide>");
+            //         println!("{}", s.trim_end_matches('\0'));
+            //
+            //     }
+            //  }
         }
         //left arrow key
         else if scancode == 0xcb {
@@ -112,7 +147,7 @@ impl Tty {
                     let cmd_buf = self.input_buf;
                     self.add_history(cmd_buf);
                     self.execute(&cmd_buf[..cmd_len]);
-                    self.clear();
+                    self.clear_buf();
                 }else{
                     self.add_buffer(c as u8);
                 }

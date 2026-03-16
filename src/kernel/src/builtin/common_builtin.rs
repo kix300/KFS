@@ -18,7 +18,7 @@ pub fn help(){
     println!("Command :");
     println!("help : show all command");
     println!("reboot : reboot computer");
-    println!("miguel: ???");
+    println!("clear: clear screen");
 }
 
 
