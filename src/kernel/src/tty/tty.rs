@@ -104,29 +104,17 @@ impl Tty {
         }
         // up arrow key
         else if scancode == 0xc8 {
-            //WORK IN PROGRESS
-            // self.clear_buf();
-            if self.history_idx < self.history_len{
-                self.history_idx += 1;
-            }
-            else{
-                self.history_idx -= 1;
-            }
-            println!("hislen: {}",self.history_len);
-            println!("hisidx: {}",self.history_idx);
-            if self.history_idx < self.history_len{
-                let s = core::str::from_utf8(&self.history[self.history_idx]).unwrap_or("<invalide>");
-                println!("{}", s.trim_end_matches('\0'));
-
-            }
-
-            // for entry in self.history.iter() {
-            //     if entry != &[0u8; 256]{
-            //         let s = core::str::from_utf8(entry).unwrap_or("<invalide>");
-            //         println!("{}", s.trim_end_matches('\0'));
-            //
-            //     }
-            //  }
+            if self.history_len == 0 { return; }
+            self.history_idx = (self.history_idx + 1) % self.history_len;
+            let s = core::str::from_utf8(&self.history[self.history_idx]).unwrap_or("<invalide>");
+            println!("{}", s.trim_end_matches('\0'));
+        }
+        // down arrow key
+        else if scancode == 0xd0 {
+            if self.history_len == 0 { return; }
+            self.history_idx = (self.history_idx + self.history_len - 1) % self.history_len;
+            let s = core::str::from_utf8(&self.history[self.history_idx]).unwrap_or("<invalide>");
+            println!("{}", s.trim_end_matches('\0'));
         }
         //left arrow key
         else if scancode == 0xcb {
@@ -145,6 +133,9 @@ impl Tty {
                     crate::device::cursor::CURSOR.lock().update_cursor(0, cy);
                     let cmd_len = self.input_len;
                     let cmd_buf = self.input_buf;
+                    if self.history_len > 0{
+                        self.history_idx = self.history_len -1;
+                    }
                     self.add_history(cmd_buf);
                     self.execute(&cmd_buf[..cmd_len]);
                     self.clear_buf();
