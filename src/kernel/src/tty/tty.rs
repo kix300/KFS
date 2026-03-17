@@ -20,7 +20,6 @@ pub struct Tty {
     input_len:    usize,
 
     history:      [[u8; CMD_MAX_LEN]; CMD_HISTORY_SIZE],
-    history_lens: [usize; CMD_HISTORY_SIZE],
     history_len:  usize,
     history_idx:  usize,
 }
@@ -37,7 +36,6 @@ impl Tty {
             input_buf:    [0u8; CMD_MAX_LEN],
             input_len:    0,
             history:      [[0u8; CMD_MAX_LEN]; CMD_HISTORY_SIZE],
-            history_lens: [0usize; CMD_HISTORY_SIZE],
             history_len:  0,
             history_idx:  0,
         }
