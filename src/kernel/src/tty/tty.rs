@@ -47,6 +47,15 @@ impl Tty {
             self.history_len += 1;
         }
     }
+    // ici on va clear le buff actuel et ecrire dedans char par char sans les \0
+    pub fn add_history_to_buffer(&mut self, input_buf: [u8; CMD_MAX_LEN]){
+        //clear_buf
+        //for c in input_buf.iter 
+        //input_buf[i] = c
+        //input_len +=1
+        //crate::vga_buffer::WRITER.lock().write_byte(c);
+
+    }
 
     pub fn add_buffer(&mut self, c: u8) {
         if self.input_len < CMD_MAX_LEN {
