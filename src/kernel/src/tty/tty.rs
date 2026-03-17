@@ -1,15 +1,3 @@
-// ************************************************************************** //
-//                                                                            //
-//                                                        :::      ::::::::   //
-//   tty.rs                                             :+:      :+:    :+:   //
-//                                                    +:+ +:+         +:+     //
-//   By: kduroux <kduroux@student.42.fr>            +#+  +:+       +#+        //
-//                                                +#+#+#+#+#+   +#+           //
-//   Created: 2026/03/16 11:40:07 by kduroux           #+#    #+#             //
-//   Updated: 2026/03/16 11:53:13 by kduroux          ###   ########.fr       //
-//                                                                            //
-// ************************************************************************** //
-
 use crate::println;
 
 const CMD_MAX_LEN: usize = 256;
@@ -49,12 +37,22 @@ impl Tty {
     }
     // ici on va clear le buff actuel et ecrire dedans char par char sans les \0
     pub fn add_history_to_buffer(&mut self, input_buf: [u8; CMD_MAX_LEN]){
-        //clear_buf
-        //for c in input_buf.iter 
-        //input_buf[i] = c
-        //input_len +=1
-        //crate::vga_buffer::WRITER.lock().write_byte(c);
-
+        self.clear_buf();
+        let cy = crate::device::cursor::CURSOR.lock().get_cursor_position().1;
+        crate::device::cursor::CURSOR.lock().update_cursor(0, cy);
+        {
+            let mut writer = crate::vga_buffer::WRITER.lock();
+            writer.clear_row(crate::vga_buffer::vga_buffer::BUFFER_HEIGHT - 1);
+            writer.reset_col();
+        }
+        for c in input_buf.iter(){
+            if *c == 0 {return;};
+            self.input_buf[self.input_len] = *c;
+            self.input_len +=1;
+            crate::vga_buffer::WRITER.lock().write_byte(*c);
+            let (cx, cy) = crate::device::cursor::CURSOR.lock().get_cursor_position();
+            crate::device::cursor::CURSOR.lock().update_cursor(cx+1, cy);
+        }
     }
 
     pub fn add_buffer(&mut self, c: u8) {
@@ -112,16 +110,16 @@ impl Tty {
         // up arrow key
         else if scancode == 0xc8 {
             if self.history_len == 0 { return; }
-            self.history_idx = (self.history_idx + 1) % self.history_len;
-            let s = core::str::from_utf8(&self.history[self.history_idx]).unwrap_or("<invalide>");
-            println!("{}", s.trim_end_matches('\0'));
+            self.history_idx = (self.history_idx + self.history_len - 1) % self.history_len;
+            self.add_history_to_buffer(self.history[self.history_idx]);
+            // let s = core::str::from_utf8(&self.history[self.history_idx]).unwrap_or("<invalide>");
+            // println!("{}", s.trim_end_matches('\0'));
         }
         // down arrow key
         else if scancode == 0xd0 {
             if self.history_len == 0 { return; }
-            self.history_idx = (self.history_idx + self.history_len - 1) % self.history_len;
-            let s = core::str::from_utf8(&self.history[self.history_idx]).unwrap_or("<invalide>");
-            println!("{}", s.trim_end_matches('\0'));
+            self.history_idx = (self.history_idx + 1) % self.history_len;
+            self.add_history_to_buffer(self.history[self.history_idx]);
         }
         //left arrow key
         else if scancode == 0xcb {
@@ -143,8 +141,10 @@ impl Tty {
                     if self.history_len > 0{
                         self.history_idx = self.history_len -1;
                     }
-                    self.add_history(cmd_buf);
-                    self.execute(&cmd_buf[..cmd_len]);
+                    if cmd_len > 0{
+                        self.add_history(cmd_buf);
+                        self.execute(&cmd_buf[..cmd_len]);
+                    }
                     self.clear_buf();
                 }else{
                     self.add_buffer(c as u8);
