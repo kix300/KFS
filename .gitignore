@@ -4,5 +4,6 @@ boot.o
 target/
 kernel.iso
 iso/
+.git
 
 
