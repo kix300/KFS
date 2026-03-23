@@ -62,7 +62,7 @@ if [ -f $QEMUDISK ]; then
   QEMUFLAGS="-drive file=$QEMUDISK,format=raw $QEMUFLAGS"
 fi
 
-${QEMU} -cdrom kernel.iso -machine pc $QEMUFLAGS -display sdl 
+${QEMU} -cdrom kernel.iso -machine pc $QEMUFLAGS -display sdl -device VGA -device VGA
 EXIT=$?
 
 if [ "$EXIT" -ne 33 ]; then
