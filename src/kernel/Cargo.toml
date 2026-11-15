@@ -19,14 +19,14 @@ test = true
 bench = false
 
 [profile.dev]
-# panic = "abort"
+panic = "abort"
 lto = true
 
 [profile.test]
 inherits = "dev"
 
 [profile.release]
-# panic = "abort"
+panic = "abort"
 lto = true
 opt-level = 2
 strip = true

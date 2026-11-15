@@ -23,6 +23,10 @@ KFS est un noyau de système d'exploitation bare-metal conçu pour l'architectur
 - GNU Make
 - GRUB (pour le bootloader)
 
+## Update
+
+Rajout de --gc-sections qui enleve les fonctions pas utilisé par defaults de compiler_builtins
+
 ## Compilation et exécution
 
 ### Lancer le kernel

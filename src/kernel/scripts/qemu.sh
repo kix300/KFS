@@ -19,7 +19,7 @@ case $ARCH in
         AS=nasm
         ASFLAGS="-f elf32"
         LD=ld
-        LDFLAGS="-m elf_i386 -T $PROJECT_ROOT/src/linker.ld"
+        LDFLAGS="-m elf_i386 --gc-sections -T $PROJECT_ROOT/src/linker.ld"
         RUST_TARGET="i386-unknown-none"
         ;;
     "x86_64")
