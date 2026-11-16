@@ -7,9 +7,12 @@ SECTIONS {
         KEEP(*(.multiboot))
     }
 
-    .gdt ALIGN(8) : {
+    .gdt 0x00000800 : ALIGN(8) {
         KEEP(*(.gdt))
     }
+	
+	. = 1M + SIZEOF(.boot);
+
     
     .text : {
         *(.text)
