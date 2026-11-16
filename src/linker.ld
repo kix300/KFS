@@ -6,6 +6,10 @@ SECTIONS {
     .boot : ALIGN(4K) {
         KEEP(*(.multiboot))
     }
+
+    .gdt ALIGN(8) : {
+        KEEP(*(.gdt))
+    }
     
     .text : {
         *(.text)

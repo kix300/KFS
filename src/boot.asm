@@ -21,6 +21,8 @@ align 16
 stack_bottom:
     resb 16384  ; 16 KB stack
 stack_top:
+global stack_bottom
+global stack_top
 
 ; Point d'entrée
 section .text

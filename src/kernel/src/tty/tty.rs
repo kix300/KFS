@@ -90,6 +90,7 @@ impl Tty {
             b"miguel" => crate::builtin::common_builtin::miguel(),
             b"reboot" => crate::builtin::common_builtin::reboot(),
             b"clear" => crate::builtin::common_builtin::clear(),
+            b"stack" => crate::builtin::common_builtin::stack(),
             _ => println!("command unknow: {}", core::str::from_utf8(cmd).unwrap_or("?"))
         }
     } 
@@ -157,4 +158,3 @@ impl Tty {
 }
 use spin::Mutex;
 pub static TTY: Mutex<Tty> = Mutex::new(Tty::new());
-
